@@ -18,9 +18,12 @@
 
 package org.wso2.carbon.identity.captcha.filter;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
+import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.captcha.connector.CaptchaConnector;
 import org.wso2.carbon.identity.captcha.connector.CaptchaPostValidationResponse;
 import org.wso2.carbon.identity.captcha.connector.CaptchaPreValidationResponse;
@@ -59,6 +62,7 @@ public class CaptchaFilter implements Filter {
     }
 
     @Override
+    @SuppressFBWarnings("UNVALIDATED_REDIRECT")
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
 
@@ -114,14 +118,14 @@ public class CaptchaFilter implements Filter {
                     boolean validCaptcha = selectedCaptchaConnector.verifyCaptcha(servletRequest, servletResponse);
                     if (!validCaptcha) {
                         log.warn("Captcha validation failed for the user.");
-                        httpResponse.sendRedirect(CaptchaUtil.getOnFailRedirectUrl(httpRequest.getHeader("referer"),
+                        httpResponse.sendRedirect(CaptchaUtil.getOnFailRedirectUrl(extractRedirectURL(httpRequest),
                                 captchaPreValidationResponse.getOnCaptchaFailRedirectUrls(),
                                 captchaPreValidationResponse.getCaptchaAttributes()));
                         return;
                     }
                 } catch (CaptchaClientException e) {
                     log.warn("Captcha validation failed for the user. Cause : " + e.getMessage());
-                    httpResponse.sendRedirect(CaptchaUtil.getOnFailRedirectUrl(httpRequest.getHeader("referer"),
+                    httpResponse.sendRedirect(CaptchaUtil.getOnFailRedirectUrl(extractRedirectURL(httpRequest),
                             captchaPreValidationResponse.getOnCaptchaFailRedirectUrls(),
                             captchaPreValidationResponse.getCaptchaAttributes()));
                     return;
@@ -184,6 +188,16 @@ public class CaptchaFilter implements Filter {
             filterChain.doFilter(preValidationResponse.getWrappedHttpServletRequest(), servletResponse);
         } else {
             filterChain.doFilter(servletRequest, servletResponse);
+        }
+    }
+
+    private String extractRedirectURL(HttpServletRequest httpRequest) {
+
+        AuthenticationContext authenticationContext = FrameworkUtils.getContextData(httpRequest);
+        if (authenticationContext != null) {
+            return authenticationContext.getRedirectURL();
+        } else {
+            return httpRequest.getHeader("referer");
         }
     }
 }
