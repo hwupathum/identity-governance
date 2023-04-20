@@ -98,9 +98,9 @@ jobs:
           echo 'Send Pull Request'
           echo "=========================================================="
           TITLE="Merge '${PR_TITLE}' to ${{ env.TARGET_BRANCH_NAME }}"
-          BODY="[Auto generated]\nThis PR merges ${PR_URL} from the master branch to ${{ env.TARGET_BRANCH_NAME }} branch\nLink : https://github.com/${{ env.PRODUCT_REPOSITORY_PUBLIC }}/actions/runs/${{github.run_id}}"
+          BODY="[Auto generated]\nThis PR merges PR_URL from the master branch to ${{ env.TARGET_BRANCH_NAME }} branch\nLink : https://github.com/${{ env.PRODUCT_REPOSITORY_PUBLIC }}/actions/runs/${{github.run_id}}"
           RESPONSE=$(curl -s -w "%{http_code}" -k -X \
-          POST https://api.github.com/repos/${{ env.PRODUCT_REPOSITORY_PUBLIC }}/pulls \
+          POST https://api.github.com/repos/hwupathum/identity-governance/pulls \
           -H "Authorization: Bearer "${{ secrets.PAT }}"" \
           -H "Content-Type: application/json" \
           -d '{ "title": "'"${TITLE}"'","body": "'"${BODY}"'","head": "'"${{ env.GIT_USERNAME }}:${{ env.SYNCHRONIZE_BRANCH_NAME }}"'","base":"'"${{ env.TARGET_BRANCH_NAME }}"'"}')
